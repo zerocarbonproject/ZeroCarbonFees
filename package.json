@@ -1,0 +1,35 @@
+{
+  "name": "energis-fees",
+  "version": "1.0.0",
+  "description": "Energis Transaction Fees",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test",
+    "coverage": "scripts/coverage.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zerocarbonproject/energis-fees.git"
+  },
+  "author": "Philip Louw",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/zerocarbonproject/energis-fees/issues"
+  },
+  "homepage": "https://github.com/zerocarbonproject/energis-fees#readme",
+  "dependencies": {
+    "openzeppelin-solidity": "^1.11.0"
+  },
+  "devDependencies": {
+    "babel-core": "^6.26.3",
+    "babel-polyfill": "^6.23.0",
+    "babel-preset-es2015": "^6.18.0",
+    "babel-preset-stage-2": "^6.18.0",
+    "babel-preset-stage-3": "^6.17.0",
+    "babel-register": "^6.23.0",
+    "solidity-coverage": "^0.5.7"
+  }
+}
