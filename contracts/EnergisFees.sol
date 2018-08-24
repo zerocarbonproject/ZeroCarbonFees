@@ -89,8 +89,6 @@ contract EnergisFees is Ownable {
     function process() public onlyOwner {
         uint256 currPeriodIdx = getWeekIdx();
 
-        emit DebugProcess(currPeriodIdx);
-
         // Has the previous period been calculated?
         if (lastPeriodExecIdx == (currPeriodIdx - 1)) {
             // Nothing to do previous week has Already been processed
@@ -129,8 +127,6 @@ contract EnergisFees is Ownable {
         lastPeriodExecIdx = currPeriodIdx - 1;
     }
 
-    event DebugProcess(uint256 currPeriodIdx);
-
     /**
      * @dev Internal function to process end of year Clearance
      * @param yearEndPeriodCycle The Last Period Idx (Week Idx) of the year
@@ -144,12 +140,8 @@ contract EnergisFees is Ownable {
         lastPeriodCycleExecIdx = lastPeriodCycleExecIdx + 1;
         lastYearPeriod.endBalance = 0;
 
-        emit DebugEndOfYear(yearEndPeriodCycle);
-
         emit YearEndClearance(lastPeriodCycleExecIdx, tokensToClear);
     }
-
-    event DebugEndOfYear(uint256 yearEndPeriodCycle);
 
     /**
      * @dev Called when Payments are call within a week of last payment
@@ -161,8 +153,6 @@ contract EnergisFees is Ownable {
         PaymentHistory memory prePeriod = payments[currPeriodIdx - 2];
 
         uint256 tokensRecvInPeriod = availableTokens.sub(prePeriod.endBalance);
-
-        emit DebugPaymentOnTime(availableTokens, currPeriodIdx - 2, prePeriod.endBalance);
 
         if (tokensRecvInPeriod <= 0) {
             tokensRecvInPeriod = 0;
@@ -177,8 +167,6 @@ contract EnergisFees is Ownable {
 
         makePayments(prePeriod, payments[currPeriodIdx - 1], tokensRecvInPeriod, prePeriod.endBalance + tokensRecvInPeriod, currPeriodIdx - 1);
     }
-
-    event DebugPaymentOnTime(uint256 availableTokens, uint256 preBalIdx, uint256 prevEndBalance);
 
     /**
     * @dev Process a payment period
@@ -209,8 +197,6 @@ contract EnergisFees is Ownable {
             feesPay = availableTokens;
         }
 
-        emit DebugMakePaymentsReward(tokensRaised, feesPay, tokensRaised.mul(REWARD_PER).div(100));
-
         uint256 rewardPay = 0;
         if (feesPay < tokensRaised) {
             // There is money left for reward pool
@@ -230,8 +216,6 @@ contract EnergisFees is Ownable {
 
         emit Payment(weekIdx, rewardPay, feesPay);
     }
-
-    event DebugMakePaymentsReward(uint256 tokensRaised, uint256 feesPay, uint256 rewardPay);
 
     /**
     * @dev Event when payment was made
