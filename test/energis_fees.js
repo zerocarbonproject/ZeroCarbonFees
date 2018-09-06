@@ -741,10 +741,12 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
 
         // 1 Second
         const grasePeriod = 1;
+        // Total Supply of tokens
+        const totalTokenSupply = new BigNumber('100000000000000000000000000');
 
         beforeEach(async function () {
             this.periodUtil = await PeriodUtilMock.new();
-            this.token = await TokenMock.new(ctcOwner, new BigNumber('100000000000000000000000000'));
+            this.token = await TokenMock.new(ctcOwner, totalTokenSupply);
 
             await this.token.transfer(supplier1, new BigNumber('24000000000000000000000000'), {from : ctcOwner});
             await this.token.transfer(supplier2, new BigNumber('24000000000000000000000000'), {from : ctcOwner});
@@ -757,6 +759,8 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
         });
 
         it('Basic cycle test', async function() {
+            assert.isTrue((await this.token.totalSupply.call()).eq(totalTokenSupply));
+
             var startWeekIdx = await this.energisFees.getWeekIdx.call();
             var startYearIdx = await this.energisFees.getYearIdx.call();
 
@@ -810,6 +814,8 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
         });
 
         it('PeriodCycle Test 01', async function() {
+            assert.isTrue((await this.token.totalSupply.call()).eq(totalTokenSupply), 'Expected not tokens to be burned already!');
+
             var startWeekIdx = await this.energisFees.getWeekIdx.call();
             var startYearIdx = await this.energisFees.getYearIdx.call();
 
@@ -890,9 +896,13 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
             feesCtcBal = await this.token.balanceOf(this.energisFees.address);
             assert.isTrue(new BigNumber('0').eq(feesCtcBal), 'Expected 0 Tokens in Fees Contract, found ' + feesCtcBal);
             feesWalletBal = await this.token.balanceOf(feesWallet);
-            assert.isTrue(new BigNumber('282000000000000000000000').eq(feesWalletBal), 'Expected 282,000 Tokens in Fees Wallet, found ' + feesWalletBal);
+            assert.isTrue(new BigNumber('267787500000000000000000').eq(feesWalletBal), 'Expected 267,787.5 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('593600000000000000000000').eq(rewardBal), 'Expected 593,600 Tokens in Reward Wallet, found ' + rewardBal);
+
+            // Validate tokens where burned
+            var totalTokens = await this.token.totalSupply.call();
+            assert.isTrue(totalTokens.eq(totalTokenSupply.sub(new BigNumber('14212500000000000000000'))), 'Expected 14,212.5 to have been burned! Found ' + (totalTokenSupply.sub(totalTokens)));
         });
 
         it('PeriodCycle Test 02', async function() {
@@ -975,9 +985,11 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
             feesCtcBal = await this.token.balanceOf(this.energisFees.address);
             assert.isTrue(new BigNumber('0').eq(feesCtcBal), 'Expected 0 Tokens in Fees Contract, found ' + feesCtcBal);
             feesWalletBal = await this.token.balanceOf(feesWallet);
-            assert.isTrue(new BigNumber('1125681500000000000000000').eq(feesWalletBal), 'Expected 1,125,681.5 Tokens in Fees Wallet, found ' + feesWalletBal);
+            assert.isTrue(new BigNumber('1115724000000000000000000').eq(feesWalletBal), 'Expected 1,115,724 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('1200041500000000000000000').eq(rewardBal), 'Expected 1,200,041.5 Tokens in Reward Wallet, found ' + rewardBal);
+            var totalTokens = await this.token.totalSupply.call();
+            assert.isTrue(totalTokens.eq(totalTokenSupply.sub(new BigNumber('9957500000000000000000'))), 'Expected 9,957.5 to have been burned! Found ' + (totalTokenSupply.sub(totalTokens)));
 
             // Period 6 : 200,000
             await this.token.transfer(this.energisFees.address, new BigNumber('200000000000000000000000'), {from : supplier1});
@@ -990,7 +1002,7 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
             feesCtcBal = await this.token.balanceOf(this.energisFees.address);
             assert.isTrue(new BigNumber('0').eq(feesCtcBal), 'Expected 0 Tokens in Fees Contract, found ' + feesCtcBal);
             feesWalletBal = await this.token.balanceOf(feesWallet);
-            assert.isTrue(new BigNumber('1311388925000000000000000').eq(feesWalletBal), 'Expected 1,311,388.925 Tokens in Fees Wallet, found ' + feesWalletBal);
+            assert.isTrue(new BigNumber('1301431425000000000000000').eq(feesWalletBal), 'Expected 1,301,431.525 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('1214334075000000000000000').eq(rewardBal), 'Expected 1,214,334.075 Tokens in Reward Wallet, found ' + rewardBal);
 
@@ -1005,7 +1017,7 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
             feesCtcBal = await this.token.balanceOf(this.energisFees.address);
             assert.isTrue(new BigNumber('0').eq(feesCtcBal), 'Expected 0 Tokens in Fees Contract, found ' + feesCtcBal);
             feesWalletBal = await this.token.balanceOf(feesWallet);
-            assert.isTrue(new BigNumber('1331388925000000000000000').eq(feesWalletBal), 'Expected 1,331,388.925 Tokens in Fees Wallet, found ' + feesWalletBal);
+            assert.isTrue(new BigNumber('1321431425000000000000000').eq(feesWalletBal), 'Expected 1,321,431.425 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('1214334075000000000000000').eq(rewardBal), 'Expected 1,214,334.075 Tokens in Reward Wallet, found ' + rewardBal);
 
@@ -1020,7 +1032,7 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
             feesCtcBal = await this.token.balanceOf(this.energisFees.address);
             assert.isTrue(new BigNumber('20000000000000000000000').eq(feesCtcBal), 'Expected 20,000 Tokens in Fees Contract, found ' + feesCtcBal);
             feesWalletBal = await this.token.balanceOf(feesWallet);
-            assert.isTrue(new BigNumber('1371388925000000000000000').eq(feesWalletBal), 'Expected 1,371,388.925 Tokens in Fees Wallet, found ' + feesWalletBal);
+            assert.isTrue(new BigNumber('1361431425000000000000000').eq(feesWalletBal), 'Expected 1,361,431.425 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('1354334075000000000000000').eq(rewardBal), 'Expected 1,354,334.075 Tokens in Reward Wallet, found ' + rewardBal);
 
@@ -1035,7 +1047,7 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
             feesCtcBal = await this.token.balanceOf(this.energisFees.address);
             assert.isTrue(new BigNumber('40000000000000000000000').eq(feesCtcBal), 'Expected 40,000 Tokens in Fees Contract, found ' + feesCtcBal);
             feesWalletBal = await this.token.balanceOf(feesWallet);
-            assert.isTrue(new BigNumber('1411388925000000000000000').eq(feesWalletBal), 'Expected 1,411,388.925 Tokens in Fees Wallet, found ' + feesWalletBal);
+            assert.isTrue(new BigNumber('1401431425000000000000000').eq(feesWalletBal), 'Expected 1,401,431.425 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('1494334075000000000000000').eq(rewardBal), 'Expected 1,494,334.075 Tokens in Reward Wallet, found ' + rewardBal);
 
@@ -1051,9 +1063,11 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
             feesCtcBal = await this.token.balanceOf(this.energisFees.address);
             assert.isTrue(new BigNumber('0').eq(feesCtcBal), 'Expected 0 Tokens in Fees Contract, found ' + feesCtcBal);
             feesWalletBal = await this.token.balanceOf(feesWallet);
-            assert.isTrue(new BigNumber('1496388925000000000000000').eq(feesWalletBal), 'Expected 1,496,388.925 Tokens in Fees Wallet, found ' + feesWalletBal);
+            assert.isTrue(new BigNumber('1474681425000000000000000').eq(feesWalletBal), 'Expected 1,474,681.425 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('1599334075000000000000000').eq(rewardBal), 'Expected 1,599,334.075 Tokens in Reward Wallet, found ' + rewardBal);
+            totalTokens = await this.token.totalSupply.call();
+            assert.isTrue(totalTokens.eq(totalTokenSupply.sub(new BigNumber('11750000000000000000000').add(new BigNumber('9957500000000000000000')))), 'Expected 11,750 to have been burned! Found ' + (totalTokenSupply.sub(totalTokens)));
         });
 
         it('PeriodCycle Test 03', async function() {
@@ -1151,9 +1165,11 @@ contract('EnergisFees', function([_, ctcOwner, feesWallet, rewardWallet, supplie
             feesCtcBal = await this.token.balanceOf(this.energisFees.address);
             assert.isTrue(new BigNumber('0').eq(feesCtcBal), 'Expected 0 Tokens in Fees Contract, found ' + feesCtcBal);
             feesWalletBal = await this.token.balanceOf(feesWallet);
-            assert.isTrue(new BigNumber('652438125000000000000000').eq(feesWalletBal), 'Expected 652,438.125 Tokens in Fees Wallet, found ' + feesWalletBal);
+            assert.isTrue(new BigNumber('627438125000000000000000').eq(feesWalletBal), 'Expected 627,438.125 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('1173284875000000000000000').eq(rewardBal), 'Expected 1,173,284.875 Tokens in Reward Wallet, found ' + rewardBal);
+            var totalTokens = await this.token.totalSupply.call();
+            assert.isTrue(totalTokens.eq(totalTokenSupply.sub(new BigNumber('25000000000000000000000'))), 'Expected 25,000 to have been burned! Found ' + (totalTokenSupply.sub(totalTokens)));
         });
     });
 });

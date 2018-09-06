@@ -1,9 +1,9 @@
-pragma solidity ^0.4.21;
+pragma solidity ^0.4.24;
 
 import "./PeriodUtil.sol";
+import "./ERC20Burnable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "openzeppelin-solidity/contracts/token/ERC20/ERC20.sol";
 
 /**
  * @title EnergisFees
@@ -52,6 +52,8 @@ contract EnergisFees is Ownable {
     uint256 internal constant FEES_TOKEN_MIN_PERPREV = 95;
     // Rewards Percentage of Period Received
     uint256 internal constant REWARD_PER = 70;
+    // % Amount of remaining tokens to burn at end of year
+    uint256 internal constant BURN_PER = 25;
     
     /**
      * @param _tokenAdr The Address of the Token
@@ -136,7 +138,11 @@ contract EnergisFees is Ownable {
         uint256 availableTokens = currentBalance();
         uint256 tokensToClear = min256(availableTokens,lastYearPeriod.endBalance);
 
-        assert(ERC20(tokenAddress).transfer(feesWallet, tokensToClear));
+        // Burn some of tokens
+        uint256 tokensToBurn = tokensToClear.mul(BURN_PER).div(100);
+        ERC20Burnable(tokenAddress).burn(tokensToBurn);
+
+        assert(ERC20Burnable(tokenAddress).transfer(feesWallet, tokensToClear.sub(tokensToBurn)));
         lastPeriodCycleExecIdx = lastPeriodCycleExecIdx + 1;
         lastYearPeriod.endBalance = 0;
 
@@ -208,8 +214,8 @@ contract EnergisFees is Ownable {
         currPayment.fees = feesPay;
         currPayment.reward = rewardPay;
 
-        assert(ERC20(tokenAddress).transfer(rewardWallet, rewardPay));
-        assert(ERC20(tokenAddress).transfer(feesWallet, feesPay));
+        assert(ERC20Burnable(tokenAddress).transfer(rewardWallet, rewardPay));
+        assert(ERC20Burnable(tokenAddress).transfer(feesWallet, feesPay));
 
         currPayment.endBalance = availableTokens - feesPay - rewardPay;
         currPayment.paid = true;
@@ -237,7 +243,7 @@ contract EnergisFees is Ownable {
     * @dev Returns the token balance of the Fees contract
     */
     function currentBalance() internal view returns (uint256) {
-        return ERC20(tokenAddress).balanceOf(address(this));
+        return ERC20Burnable(tokenAddress).balanceOf(address(this));
     }
 
     /**
