@@ -42,10 +42,14 @@ contract EnergisFees is Ownable {
     // Wallet for Reward payments
     address public rewardWallet;
     
-    // Percentage amount of the weeks received tokens to go to Fees
-    uint256 internal constant FEES_PER = 20;
-    // Max Amount of Tokens to be payed out per week
-    uint256 internal constant FEES_MAX_AMOUNT = 1200000 * (10**18);
+    // Fees 1 : % tokens taken per week
+    uint256 internal constant FEES1_PER = 10;
+    // Fees 1 : Max token payout per week
+    uint256 internal constant FEES1_MAX_AMOUNT = 400000 * (10**18);
+    // Fees 2 : % tokens taken per week
+    uint256 internal constant FEES2_PER = 10;
+    // Fees 2 : Max token payout per week
+    uint256 internal constant FEES2_MAX_AMOUNT = 800000 * (10**18);
     // Min Amount of Fees to pay out per week
     uint256 internal constant FEES_TOKEN_MIN_AMOUNT = 24000 * (10**18);
     // Min Percentage Prev Week to pay out per week
@@ -187,22 +191,30 @@ contract EnergisFees is Ownable {
         assert(!currPayment.paid);
         assert(availableTokens >= tokensRaised);
 
-        uint256 feesPay = tokensRaised == 0 ? 0 : tokensRaised.mul(FEES_PER).div(100);
-        if (feesPay >= FEES_MAX_AMOUNT) {
-            feesPay = FEES_MAX_AMOUNT;
+        // Fees 1 Payment
+        uint256 fees1Pay = tokensRaised == 0 ? 0 : tokensRaised.mul(FEES1_PER).div(100);
+        if (fees1Pay >= FEES1_MAX_AMOUNT) {
+            fees1Pay = FEES1_MAX_AMOUNT;
         }
-        else {
+        // Fees 2 Payment
+        uint256 fees2Pay = tokensRaised == 0 ? 0 : tokensRaised.mul(FEES2_PER).div(100);
+        if (fees2Pay >= FEES2_MAX_AMOUNT) {
+            fees2Pay = FEES2_MAX_AMOUNT;
+        }
+
+        uint256 feesPay = fees1Pay.add(fees2Pay);
+        if (feesPay >= availableTokens) {
+            feesPay = availableTokens;
+        } else {
             // Calculates the Min percentage of previous month to pay
             uint256 prevFees95 = prevPayment.fees.mul(FEES_TOKEN_MIN_PERPREV).div(100);
             // Minimum amount of fees that is required
             uint256 minFeesPay = max256(FEES_TOKEN_MIN_AMOUNT, prevFees95);
             feesPay = max256(feesPay, minFeesPay);
+            feesPay = min256(feesPay, availableTokens);
         }
 
-        if (feesPay > availableTokens) {
-            feesPay = availableTokens;
-        }
-
+        // Rewards Payout
         uint256 rewardPay = 0;
         if (feesPay < tokensRaised) {
             // There is money left for reward pool
