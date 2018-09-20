@@ -1,7 +1,7 @@
 {
-  "name": "energis-fees",
+  "name": "zero-carbon-fees",
   "version": "1.0.0",
-  "description": "Energis Transaction Fees",
+  "description": "ZeroCarbon Transaction Fees",
   "main": "truffle-config.js",
   "directories": {
     "test": "test"
@@ -12,14 +12,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zerocarbonproject/energis-fees.git"
+    "url": "git+https://github.com/zerocarbonproject/ZeroCarbonFees.git"
   },
   "author": "Philip Louw",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/zerocarbonproject/energis-fees/issues"
+    "url": "https://github.com/zerocarbonproject/ZeroCarbonFees/issues"
   },
-  "homepage": "https://github.com/zerocarbonproject/energis-fees#readme",
+  "homepage": "https://github.com/zerocarbonproject/ZeroCarbonFees#readme",
   "dependencies": {
     "openzeppelin-solidity": "^1.12.0"
   },

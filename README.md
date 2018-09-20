@@ -1,4 +1,4 @@
-# Energis Fees Contract
+# ZeroCarbonFees Contract
 
 Tackling climate change with blockchain
 
