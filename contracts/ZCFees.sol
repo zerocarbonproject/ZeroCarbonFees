@@ -3,7 +3,7 @@ pragma solidity ^0.4.24;
 import "./PeriodUtil.sol";
 import "./ERC20Burnable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "openzeppelin-solidity/contracts/ownership/Claimable.sol";
 
 /**
  * @title ZCFees
@@ -12,7 +12,7 @@ import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
  *
  * (c) Philip Louw / Zero Carbon Project 2018. The MIT Licence.
  */
-contract ZCFees is Ownable {
+contract ZCFees is Claimable {
 
     using SafeMath for uint256;
 
