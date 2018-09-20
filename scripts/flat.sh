@@ -1,3 +1,3 @@
 #!/bin/bash
-truffle-flattener contracts/EnergisFees.sol > contracts_flat/EnergisFees.sol
+truffle-flattener contracts/ZCFees.sol > contracts_flat/ZCFees.sol
 truffle-flattener contracts/PeriodUtilWeek.sol > contracts_flat/PeriodUtilWeek.sol

@@ -6,13 +6,13 @@ import "openzeppelin-solidity/contracts/math/SafeMath.sol";
 import "openzeppelin-solidity/contracts/ownership/Ownable.sol";
 
 /**
- * @title EnergisFees
+ * @title ZCFees
  * 
  * Used to process transaction
  *
  * (c) Philip Louw / Zero Carbon Project 2018. The MIT Licence.
  */
-contract EnergisFees is Ownable {
+contract ZCFees is Ownable {
 
     using SafeMath for uint256;
 
