@@ -219,8 +219,7 @@ contract ZCFees is Claimable {
         if (feesPay < tokensRaised) {
             // There is money left for reward pool
             rewardPay = tokensRaised.mul(REWARD_PER).div(100);
-            // Rewards only comes for the tokens raised in the period
-            rewardPay = min256(rewardPay, tokensRaised.sub(feesPay));
+            rewardPay = min256(rewardPay, availableTokens.sub(feesPay));
         }
 
         currPayment.fees = feesPay;
