@@ -46,6 +46,34 @@ contract PeriodUtil {
     function getUnitsPerPeriod() public pure returns (uint256);
 }
 
+// File: openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol
+
+/**
+ * @title ERC20Basic
+ * @dev Simpler version of ERC20 interface
+ * See https://github.com/ethereum/EIPs/issues/179
+ */
+contract ERC20Basic {
+  function totalSupply() public view returns (uint256);
+  function balanceOf(address _who) public view returns (uint256);
+  function transfer(address _to, uint256 _value) public returns (bool);
+  event Transfer(address indexed from, address indexed to, uint256 value);
+}
+
+// File: contracts/ERC20Burnable.sol
+
+/**
+ * @title BurnableToken
+ * 
+ * Interface for Basic ERC20 interactions and allowing burning  of tokens
+ *
+ * (c) Philip Louw / Zero Carbon Project 2018. The MIT Licence.
+ */
+contract ERC20Burnable is ERC20Basic {
+
+    function burn(uint256 _value) public;
+}
+
 // File: openzeppelin-solidity/contracts/math/SafeMath.sol
 
 /**
@@ -162,51 +190,52 @@ contract Ownable {
   }
 }
 
-// File: openzeppelin-solidity/contracts/token/ERC20/ERC20Basic.sol
+// File: openzeppelin-solidity/contracts/ownership/Claimable.sol
 
 /**
- * @title ERC20Basic
- * @dev Simpler version of ERC20 interface
- * See https://github.com/ethereum/EIPs/issues/179
+ * @title Claimable
+ * @dev Extension for the Ownable contract, where the ownership needs to be claimed.
+ * This allows the new owner to accept the transfer.
  */
-contract ERC20Basic {
-  function totalSupply() public view returns (uint256);
-  function balanceOf(address _who) public view returns (uint256);
-  function transfer(address _to, uint256 _value) public returns (bool);
-  event Transfer(address indexed from, address indexed to, uint256 value);
+contract Claimable is Ownable {
+  address public pendingOwner;
+
+  /**
+   * @dev Modifier throws if called by any account other than the pendingOwner.
+   */
+  modifier onlyPendingOwner() {
+    require(msg.sender == pendingOwner);
+    _;
+  }
+
+  /**
+   * @dev Allows the current owner to set the pendingOwner address.
+   * @param newOwner The address to transfer ownership to.
+   */
+  function transferOwnership(address newOwner) public onlyOwner {
+    pendingOwner = newOwner;
+  }
+
+  /**
+   * @dev Allows the pendingOwner address to finalize the transfer.
+   */
+  function claimOwnership() public onlyPendingOwner {
+    emit OwnershipTransferred(owner, pendingOwner);
+    owner = pendingOwner;
+    pendingOwner = address(0);
+  }
 }
 
-// File: openzeppelin-solidity/contracts/token/ERC20/ERC20.sol
+// File: contracts/ZCFees.sol
 
 /**
- * @title ERC20 interface
- * @dev see https://github.com/ethereum/EIPs/issues/20
- */
-contract ERC20 is ERC20Basic {
-  function allowance(address _owner, address _spender)
-    public view returns (uint256);
-
-  function transferFrom(address _from, address _to, uint256 _value)
-    public returns (bool);
-
-  function approve(address _spender, uint256 _value) public returns (bool);
-  event Approval(
-    address indexed owner,
-    address indexed spender,
-    uint256 value
-  );
-}
-
-// File: contracts/EnergisFees.sol
-
-/**
- * @title EnergisFees
+ * @title ZCFees
  * 
  * Used to process transaction
  *
  * (c) Philip Louw / Zero Carbon Project 2018. The MIT Licence.
  */
-contract EnergisFees is Ownable {
+contract ZCFees is Claimable {
 
     using SafeMath for uint256;
 
@@ -236,16 +265,22 @@ contract EnergisFees is Ownable {
     // Wallet for Reward payments
     address public rewardWallet;
     
-    // Percentage amount of the weeks received tokens to go to Fees
-    uint256 internal constant FEES_PER = 20;
-    // Max Amount of Tokens to be payed out per week
-    uint256 internal constant FEES_MAX_AMOUNT = 1200000 * (10**18);
+    // Fees 1 : % tokens taken per week
+    uint256 internal constant FEES1_PER = 10;
+    // Fees 1 : Max token payout per week
+    uint256 internal constant FEES1_MAX_AMOUNT = 400000 * (10**18);
+    // Fees 2 : % tokens taken per week
+    uint256 internal constant FEES2_PER = 10;
+    // Fees 2 : Max token payout per week
+    uint256 internal constant FEES2_MAX_AMOUNT = 800000 * (10**18);
     // Min Amount of Fees to pay out per week
     uint256 internal constant FEES_TOKEN_MIN_AMOUNT = 24000 * (10**18);
     // Min Percentage Prev Week to pay out per week
     uint256 internal constant FEES_TOKEN_MIN_PERPREV = 95;
     // Rewards Percentage of Period Received
     uint256 internal constant REWARD_PER = 70;
+    // % Amount of remaining tokens to burn at end of year
+    uint256 internal constant BURN_PER = 25;
     
     /**
      * @param _tokenAdr The Address of the Token
@@ -330,7 +365,11 @@ contract EnergisFees is Ownable {
         uint256 availableTokens = currentBalance();
         uint256 tokensToClear = min256(availableTokens,lastYearPeriod.endBalance);
 
-        assert(ERC20(tokenAddress).transfer(feesWallet, tokensToClear));
+        // Burn some of tokens
+        uint256 tokensToBurn = tokensToClear.mul(BURN_PER).div(100);
+        ERC20Burnable(tokenAddress).burn(tokensToBurn);
+
+        assert(ERC20Burnable(tokenAddress).transfer(feesWallet, tokensToClear.sub(tokensToBurn)));
         lastPeriodCycleExecIdx = lastPeriodCycleExecIdx + 1;
         lastYearPeriod.endBalance = 0;
 
@@ -375,35 +414,42 @@ contract EnergisFees is Ownable {
         assert(!currPayment.paid);
         assert(availableTokens >= tokensRaised);
 
-        uint256 feesPay = tokensRaised == 0 ? 0 : tokensRaised.mul(FEES_PER).div(100);
-        if (feesPay >= FEES_MAX_AMOUNT) {
-            feesPay = FEES_MAX_AMOUNT;
+        // Fees 1 Payment
+        uint256 fees1Pay = tokensRaised == 0 ? 0 : tokensRaised.mul(FEES1_PER).div(100);
+        if (fees1Pay >= FEES1_MAX_AMOUNT) {
+            fees1Pay = FEES1_MAX_AMOUNT;
         }
-        else {
+        // Fees 2 Payment
+        uint256 fees2Pay = tokensRaised == 0 ? 0 : tokensRaised.mul(FEES2_PER).div(100);
+        if (fees2Pay >= FEES2_MAX_AMOUNT) {
+            fees2Pay = FEES2_MAX_AMOUNT;
+        }
+
+        uint256 feesPay = fees1Pay.add(fees2Pay);
+        if (feesPay >= availableTokens) {
+            feesPay = availableTokens;
+        } else {
             // Calculates the Min percentage of previous month to pay
             uint256 prevFees95 = prevPayment.fees.mul(FEES_TOKEN_MIN_PERPREV).div(100);
             // Minimum amount of fees that is required
             uint256 minFeesPay = max256(FEES_TOKEN_MIN_AMOUNT, prevFees95);
             feesPay = max256(feesPay, minFeesPay);
+            feesPay = min256(feesPay, availableTokens);
         }
 
-        if (feesPay > availableTokens) {
-            feesPay = availableTokens;
-        }
-
+        // Rewards Payout
         uint256 rewardPay = 0;
         if (feesPay < tokensRaised) {
             // There is money left for reward pool
             rewardPay = tokensRaised.mul(REWARD_PER).div(100);
-            // Rewards only comes for the tokens raised in the period
-            rewardPay = min256(rewardPay, tokensRaised.sub(feesPay));
+            rewardPay = min256(rewardPay, availableTokens.sub(feesPay));
         }
 
         currPayment.fees = feesPay;
         currPayment.reward = rewardPay;
 
-        assert(ERC20(tokenAddress).transfer(rewardWallet, rewardPay));
-        assert(ERC20(tokenAddress).transfer(feesWallet, feesPay));
+        assert(ERC20Burnable(tokenAddress).transfer(rewardWallet, rewardPay));
+        assert(ERC20Burnable(tokenAddress).transfer(feesWallet, feesPay));
 
         currPayment.endBalance = availableTokens - feesPay - rewardPay;
         currPayment.paid = true;
@@ -431,7 +477,7 @@ contract EnergisFees is Ownable {
     * @dev Returns the token balance of the Fees contract
     */
     function currentBalance() internal view returns (uint256) {
-        return ERC20(tokenAddress).balanceOf(address(this));
+        return ERC20Burnable(tokenAddress).balanceOf(address(this));
     }
 
     /**
