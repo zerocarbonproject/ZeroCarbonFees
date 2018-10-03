@@ -290,6 +290,10 @@ contract ZCFees is Claimable {
      * @param _rewardWallet Where the rewards are sent in tokens
      */
     constructor (address _tokenAdr, address _periodUtilAdr, uint256 _grasePeriod, address _feesWallet, address _rewardWallet) public {
+        assert(_tokenAddr != address(0));
+        assert(_feesWallet != address(0));
+        assert(_rewardWallet != address(0));
+        assert(_periodUtilAdr != address(0));
         tokenAddress = _tokenAdr;
         feesWallet = _feesWallet;
         rewardWallet = _rewardWallet;
