@@ -20,25 +20,25 @@ contract('ZCFees', function([_, ctcOwner, feesWallet, rewardWallet, supplier1, s
           await expectThrow(ZCFees.new(this.token.address, this.periodUtil.address, 0, feesWallet, rewardWallet, {from : ctcOwner}));
         });
 
-        it('Contract should have a owner', async function() {
-          this.periodUtil = await PeriodUtilMock.new();
-          this.token = await TokenMock.new(ctcOwner, 900000);
-          return ZCFees.new(this.token.address, this.periodUtil.address, 5, feesWallet, rewardWallet, {from : ctcOwner}).then(function(instance) {
-            return instance.owner();
-          }).then(function(owner) {
-            assert.isTrue(owner !== 0, 'Owner is set');
-          });
-        });
+        // it('Contract should have a owner', async function() {
+        //   this.periodUtil = await PeriodUtilMock.new();
+        //   this.token = await TokenMock.new(ctcOwner, 900000);
+        //   return ZCFees.new(this.token.address, this.periodUtil.address, 5, feesWallet, rewardWallet, {from : ctcOwner}).then(function(instance) {
+        //     return instance.owner();
+        //   }).then(function(owner) {
+        //     assert.isTrue(owner !== 0, 'Owner is set');
+        //   });
+        // });
 
-        it('Contract creator should be owner', async function() {
-            this.periodUtil = await PeriodUtilMock.new();
-            this.token = await TokenMock.new(ctcOwner, 900000);
-            return ZCFees.new(this.token.address, this.periodUtil.address, 5, feesWallet, rewardWallet, {from : ctcOwner}).then(function(instance) {
-              return instance.owner();
-            }).then(function(owner) {
-              assert.isTrue(owner == ctcOwner, 'Owner is set to creator');
-            });
-          });
+        // it('Contract creator should be owner', async function() {
+        //     this.periodUtil = await PeriodUtilMock.new();
+        //     this.token = await TokenMock.new(ctcOwner, 900000);
+        //     return ZCFees.new(this.token.address, this.periodUtil.address, 5, feesWallet, rewardWallet, {from : ctcOwner}).then(function(instance) {
+        //       return instance.owner();
+        //     }).then(function(owner) {
+        //       assert.isTrue(owner == ctcOwner, 'Owner is set to creator');
+        //     });
+        //   });
     });
 
     describe('Test On Time Processing (Single Processing)', async function() {
@@ -1283,6 +1283,66 @@ contract('ZCFees', function([_, ctcOwner, feesWallet, rewardWallet, supplier1, s
             assert.isTrue(new BigNumber('1256555475000000000000000').eq(rewardBal), 'Expected 1,256,555.475 Tokens in Reward Wallet, found ' + rewardBal);
             var totalTokens = await this.token.totalSupply.call();
             assert.isTrue(totalTokens.eq(totalTokenSupply.sub(new BigNumber('4182350000000000000000'))), 'Expected 4,182.35 to have been burned! Found ' + (totalTokenSupply.sub(totalTokens)));
+        });
+    });
+
+    describe('Multiple calls', async function() {
+        // 1 Second
+        const grasePeriod = 1;
+        // Total Supply of tokens
+        const totalTokenSupply = new BigNumber('100000000000000000000000000');
+
+        beforeEach(async function () {
+            this.periodUtil = await PeriodUtilMock.new();
+            this.token = await TokenMock.new(ctcOwner, totalTokenSupply);
+
+            await this.token.transfer(supplier1, new BigNumber('24000000000000000000000000'), {from : ctcOwner});
+            await this.token.transfer(supplier2, new BigNumber('24000000000000000000000000'), {from : ctcOwner});
+            await this.token.transfer(supplier3, new BigNumber('24000000000000000000000000'), {from : ctcOwner});
+
+            // Wait till within 1st sec of 10 time unit and begining of Cycle
+            while ((new Date().getTime() / 1000) % 50 > 1) {
+            }
+            this.zcfees = await ZCFees.new(this.token.address, this.periodUtil.address, grasePeriod, feesWallet, rewardWallet, {from : ctcOwner});
+        });
+
+        it('Break', async function() {
+            var startWeekIdx = await this.zcfees.getWeekIdx.call();
+            var startYearIdx = await this.zcfees.getYearIdx.call();
+
+            var periodIdx = await this.zcfees.getWeekIdx.call();
+            var yearIdx = await this.zcfees.getYearIdx.call();
+
+            // Period 1 : 500,000
+            await this.token.transfer(this.zcfees.address, new BigNumber('500000000000000000000000'), {from : supplier1});
+            while ((await this.zcfees.getWeekIdx.call()).comparedTo(periodIdx) <= 0) {
+                await this.zcfees.process({from : ctcOwner});
+                var e = new Date().getTime() + 250;
+                while (new Date().getTime() <= e) {}
+            }
+            await this.zcfees.process({from : ctcOwner});
+            var periodIdx = await this.zcfees.getWeekIdx.call();
+            var feesCtcBal = await this.token.balanceOf(this.zcfees.address);
+            assert.isTrue(new BigNumber('50000000000000000000000').eq(feesCtcBal), 'Expected 50,000 120,000 Tokens in Fees Contract, found ' + feesCtcBal);
+            var feesWalletBal = await this.token.balanceOf(feesWallet);
+            assert.isTrue(new BigNumber('100000000000000000000000').eq(feesWalletBal), 'Expected 100,000 Tokens in Fees Wallet, found ' + feesWalletBal);
+            var rewardBal = await this.token.balanceOf(rewardWallet);
+            assert.isTrue(new BigNumber('350000000000000000000000').eq(rewardBal), 'Expected 350,000 Tokens in Reward Wallet, found ' + rewardBal);
+
+            // Period 2 : 500,000
+            await this.token.transfer(this.zcfees.address, new BigNumber('500000000000000000000000'), {from : supplier1});
+            while ((await this.zcfees.getWeekIdx()).comparedTo(periodIdx) <= 0) {
+                var e = new Date().getTime() + 250;
+                while (new Date().getTime() <= e) {}
+            }
+            await this.zcfees.process({from : ctcOwner});
+            periodIdx = await this.zcfees.getWeekIdx.call();
+            feesCtcBal = await this.token.balanceOf(this.zcfees.address);
+            assert.isTrue(new BigNumber('100000000000000000000000').eq(feesCtcBal), 'Expected 100,000 Tokens in Fees Contract, found ' + feesCtcBal);
+            feesWalletBal = await this.token.balanceOf(feesWallet);
+            assert.isTrue(new BigNumber('200000000000000000000000').eq(feesWalletBal), 'Expected 200,000 Tokens in Fees Wallet, found ' + feesWalletBal);
+            rewardBal = await this.token.balanceOf(rewardWallet);
+            assert.isTrue(new BigNumber('700000000000000000000000').eq(rewardBal), 'Expected 700,000 Tokens in Reward Wallet, found ' + rewardBal);
         });
     });
 });

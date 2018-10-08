@@ -3,7 +3,6 @@ pragma solidity ^0.4.24;
 import "./PeriodUtil.sol";
 import "./ERC20Burnable.sol";
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
-import "openzeppelin-solidity/contracts/ownership/Claimable.sol";
 
 /**
  * @title ZCFees
@@ -12,7 +11,7 @@ import "openzeppelin-solidity/contracts/ownership/Claimable.sol";
  *
  * (c) Philip Louw / Zero Carbon Project 2018. The MIT Licence.
  */
-contract ZCFees is Claimable {
+contract ZCFees {
 
     using SafeMath for uint256;
 
@@ -67,7 +66,7 @@ contract ZCFees is Claimable {
      * @param _rewardWallet Where the rewards are sent in tokens
      */
     constructor (address _tokenAdr, address _periodUtilAdr, uint256 _grasePeriod, address _feesWallet, address _rewardWallet) public {
-        assert(_tokenAddr != address(0));
+        assert(_tokenAdr != address(0));
         assert(_feesWallet != address(0));
         assert(_rewardWallet != address(0));
         assert(_periodUtilAdr != address(0));
@@ -96,7 +95,7 @@ contract ZCFees is Claimable {
     /**
      * @dev Call when Fees processing needs to happen. Can only be called by the contract Owner
      */
-    function process() public onlyOwner {
+    function process() public {
         uint256 currPeriodIdx = getWeekIdx();
 
         // Has the previous period been calculated?
