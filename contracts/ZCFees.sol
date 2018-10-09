@@ -26,6 +26,9 @@ contract ZCFees {
         uint256 endBalance;
     }
 
+    uint256 public totalRewards;
+    uint256 public totalFees;
+
     mapping (uint256 => PaymentHistory) payments;
     address public tokenAddress;
     PeriodUtil public periodUtil;
@@ -149,11 +152,13 @@ contract ZCFees {
         uint256 tokensToBurn = tokensToClear.mul(BURN_PER).div(100);
         ERC20Burnable(tokenAddress).burn(tokensToBurn);
 
-        assert(ERC20Burnable(tokenAddress).transfer(feesWallet, tokensToClear.sub(tokensToBurn)));
+        uint256 tokensToFeesWallet = tokensToClear.sub(tokensToBurn);
+        totalFees = totalFees.add(tokensToFeesWallet);
+        assert(ERC20Burnable(tokenAddress).transfer(feesWallet, tokensToFeesWallet));
         lastPeriodCycleExecIdx = lastPeriodCycleExecIdx + 1;
         lastYearPeriod.endBalance = 0;
 
-        emit YearEndClearance(lastPeriodCycleExecIdx, tokensToClear);
+        emit YearEndClearance(lastPeriodCycleExecIdx, tokensToFeesWallet, tokensToBurn);
     }
 
     /**
@@ -228,6 +233,9 @@ contract ZCFees {
         currPayment.fees = feesPay;
         currPayment.reward = rewardPay;
 
+        totalFees = totalFees.add(feesPay);
+        totalRewards = totalRewards.add(rewardPay);
+
         assert(ERC20Burnable(tokenAddress).transfer(rewardWallet, rewardPay));
         assert(ERC20Burnable(tokenAddress).transfer(feesWallet, feesPay));
 
@@ -249,8 +257,9 @@ contract ZCFees {
     * @dev Event when year end clearance happens
     * @param yearIdx Year the clearance happend for
     * @param feesPay Amount of tokens paid in fees
+    * @param burned Amount of tokens burned
     */
-    event YearEndClearance(uint256 yearIdx, uint256 feesPay);
+    event YearEndClearance(uint256 yearIdx, uint256 feesPay, uint256 burned);
 
 
     /**

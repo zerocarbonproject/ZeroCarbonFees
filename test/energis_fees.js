@@ -86,6 +86,10 @@ contract('ZCFees', function([_, ctcOwner, feesWallet, rewardWallet, supplier1, s
             assert.isTrue(new BigNumber('0').eq(feesWalletBal), 'Expected 0 Tokens in Fees Wallet, found ' + feesWalletBal);
             var rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('0').eq(rewardBal), 'Expected 0 Tokens in Reward Wallet, found ' + rewardBal);
+            var totalFees = await this.zcfees.totalFees.call();
+            assert.isTrue(new BigNumber('0').eq(totalFees), 'Expected 0 Tokens in total Rewards, found ' + totalFees);
+            var totalRewards = await this.zcfees.totalRewards.call();
+            assert.isTrue(new BigNumber('0').eq(totalRewards), 'Expected 0 Tokens in total Rewards, found ' + totalRewards);
         });
 
         it('0 Funds Processing', async function() {
@@ -948,6 +952,10 @@ contract('ZCFees', function([_, ctcOwner, feesWallet, rewardWallet, supplier1, s
             assert.isTrue(new BigNumber('24000000000000000000000').eq(feesWalletBal), 'Expected 24,000 Tokens in Fees Wallet, found ' + feesWalletBal);
             var rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('70000000000000000000000').eq(rewardBal), 'Expected 70,000 Tokens in Reward Wallet, found ' + rewardBal);
+            var totalFees = await this.zcfees.totalFees.call();
+            assert.isTrue(new BigNumber('24000000000000000000000').eq(totalFees), 'Expected 24,000 Tokens in total Rewards, found ' + totalFees);
+            var totalRewards = await this.zcfees.totalRewards.call();
+            assert.isTrue(new BigNumber('70000000000000000000000').eq(totalRewards), 'Expected 70,000 Tokens in total Rewards, found ' + totalRewards);
 
             // Period 2 : 150,000
             await this.token.transfer(this.zcfees.address, new BigNumber('150000000000000000000000'), {from : supplier1});
@@ -963,6 +971,10 @@ contract('ZCFees', function([_, ctcOwner, feesWallet, rewardWallet, supplier1, s
             assert.isTrue(new BigNumber('54000000000000000000000').eq(feesWalletBal), 'Expected 54,000 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('175000000000000000000000').eq(rewardBal), 'Expected 175,000 Tokens in Reward Wallet, found ' + rewardBal);
+            totalFees = await this.zcfees.totalFees.call();
+            assert.isTrue(new BigNumber('54000000000000000000000').eq(totalFees), 'Expected 54,000 Tokens in total Rewards, found ' + totalFees);
+            totalRewards = await this.zcfees.totalRewards.call();
+            assert.isTrue(new BigNumber('175000000000000000000000').eq(totalRewards), 'Expected 175,000 Tokens in total Rewards, found ' + totalRewards);
 
             // Period 3 : 300,000
             await this.token.transfer(this.zcfees.address, new BigNumber('300000000000000000000000'), {from : supplier1});
@@ -978,6 +990,10 @@ contract('ZCFees', function([_, ctcOwner, feesWallet, rewardWallet, supplier1, s
             assert.isTrue(new BigNumber('114000000000000000000000').eq(feesWalletBal), 'Expected 114,000 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('385000000000000000000000').eq(rewardBal), 'Expected 385,000 Tokens in Reward Wallet, found ' + rewardBal);
+            totalFees = await this.zcfees.totalFees.call();
+            assert.isTrue(new BigNumber('114000000000000000000000').eq(totalFees), 'Expected 114,000 Tokens in total Rewards, found ' + totalFees);
+            totalRewards = await this.zcfees.totalRewards.call();
+            assert.isTrue(new BigNumber('385000000000000000000000').eq(totalRewards), 'Expected 385,000 Tokens in total Rewards, found ' + totalRewards);
 
             // Period 4 : 125,600
             await this.token.transfer(this.zcfees.address, new BigNumber('125600000000000000000000'), {from : supplier1});
@@ -993,6 +1009,10 @@ contract('ZCFees', function([_, ctcOwner, feesWallet, rewardWallet, supplier1, s
             assert.isTrue(new BigNumber('171000000000000000000000').eq(feesWalletBal), 'Expected 171,000 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('472920000000000000000000').eq(rewardBal), 'Expected 472,920 Tokens in Reward Wallet, found ' + rewardBal);
+            totalFees = await this.zcfees.totalFees.call();
+            assert.isTrue(new BigNumber('171000000000000000000000').eq(totalFees), 'Expected 171,000 Tokens in total Rewards, found ' + totalFees);
+            totalRewards = await this.zcfees.totalRewards.call();
+            assert.isTrue(new BigNumber('472920000000000000000000').eq(totalRewards), 'Expected 472,920 Tokens in total Rewards, found ' + totalRewards);
 
             // New Year
             await this.token.transfer(this.zcfees.address, new BigNumber('200000000000000000000000'), {from : supplier1});
@@ -1011,6 +1031,10 @@ contract('ZCFees', function([_, ctcOwner, feesWallet, rewardWallet, supplier1, s
             assert.isTrue(new BigNumber('253297500000000000000000').eq(feesWalletBal), 'Expected 253,297.5 Tokens in Fees Wallet, found ' + feesWalletBal);
             rewardBal = await this.token.balanceOf(rewardWallet);
             assert.isTrue(new BigNumber('612920000000000000000000').eq(rewardBal), 'Expected 612,920 Tokens in Reward Wallet, found ' + rewardBal);
+            totalFees = await this.zcfees.totalFees.call();
+            assert.isTrue(new BigNumber('253297500000000000000000').eq(totalFees), 'Expected 253,297.5 Tokens in total Rewards, found ' + totalFees);
+            totalRewards = await this.zcfees.totalRewards.call();
+            assert.isTrue(new BigNumber('612920000000000000000000').eq(totalRewards), 'Expected 612,920 Tokens in total Rewards, found ' + totalRewards);
             
             // Validate tokens where burned
             var totalTokens = await this.token.totalSupply.call();
